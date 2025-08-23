@@ -1,0 +1,11 @@
+D:\SQLAPI\publish\SQLAPI.exe
+D:\SQLAPI\publish\appsettings.json
+D:\SQLAPI\publish\SQLAPI.dll
+D:\SQLAPI\publish\SQLAPI.deps.json
+D:\SQLAPI\publish\SQLAPI.runtimeconfig.json
+D:\SQLAPI\publish\SQLAPI.pdb
+D:\SQLAPI\publish\Microsoft.OpenApi.dll
+D:\SQLAPI\publish\MySqlConnector.dll
+D:\SQLAPI\publish\Swashbuckle.AspNetCore.Swagger.dll
+D:\SQLAPI\publish\Swashbuckle.AspNetCore.SwaggerGen.dll
+D:\SQLAPI\publish\Swashbuckle.AspNetCore.SwaggerUI.dll
