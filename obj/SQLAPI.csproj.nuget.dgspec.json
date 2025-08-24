@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "d:\\SQLAPI\\SQLAPI.csproj": {}
+    "D:\\SQLAPI\\SQLAPI.csproj": {}
   },
   "projects": {
-    "d:\\SQLAPI\\SQLAPI.csproj": {
+    "D:\\SQLAPI\\SQLAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\SQLAPI\\SQLAPI.csproj",
+        "projectUniqueName": "D:\\SQLAPI\\SQLAPI.csproj",
         "projectName": "SQLAPI",
-        "projectPath": "d:\\SQLAPI\\SQLAPI.csproj",
+        "projectPath": "D:\\SQLAPI\\SQLAPI.csproj",
         "packagesPath": "C:\\Users\\Hamid\\.nuget\\packages\\",
-        "outputPath": "d:\\SQLAPI\\obj\\",
+        "outputPath": "D:\\SQLAPI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Hamid\\AppData\\Roaming\\NuGet\\NuGet.Config"

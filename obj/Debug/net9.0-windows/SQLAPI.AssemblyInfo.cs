@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SQLAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+eb6c73012c6f39da28cd76f423ac989c4453999c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d60ed83f0d6bd56fb2656315cdbe19418ce2f882")]
 [assembly: System.Reflection.AssemblyProductAttribute("SQLAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SQLAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
