@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "pO+IRr2fWuY=",
+  "dgSpecHash": "ID3G0l2EGG8=",
   "success": true,
-  "projectFilePath": "D:\\SQLAPI\\SQLAPI.csproj",
+  "projectFilePath": "d:\\SQLAPI\\SQLAPI.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Hamid\\.nuget\\packages\\microsoft.extensions.apidescription.server\\6.0.5\\microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512",
     "C:\\Users\\Hamid\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\7.0.1\\microsoft.extensions.logging.abstractions.7.0.1.nupkg.sha512",

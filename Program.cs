@@ -14,6 +14,8 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Antiforgery;
+using System.Windows.Forms;
+using System.Drawing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,9 +87,10 @@ app.UseHttpsRedirection();
 // Add redirect from /settings to /settings.html
 app.UseWhen(context => context.Request.Path.Equals("/settings", StringComparison.OrdinalIgnoreCase), appBuilder =>
 {
-    appBuilder.Run(async context =>
+    appBuilder.Run(context =>
     {
         context.Response.Redirect("/settings.html");
+        return Task.CompletedTask;
     });
 });
 
@@ -112,18 +115,102 @@ app.UseWhen(context => context.Request.Path.StartsWithSegments("/api/settings"),
 app.Use(async (context, next) =>
 {
     // Add security headers
-    context.Response.Headers.Add("X-Content-Type-Options", "nosniff");
-    context.Response.Headers.Add("X-Frame-Options", "DENY");
-    context.Response.Headers.Add("X-XSS-Protection", "1; mode=block");
-    context.Response.Headers.Add("Referrer-Policy", "no-referrer");
-    context.Response.Headers.Add("Permissions-Policy", "geolocation=(), microphone=(), camera=()");
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    context.Response.Headers["Referrer-Policy"] = "no-referrer";
+    context.Response.Headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
     
     await next();
 });
 
 app.MapControllers();
 
-app.Run();
+// Create and configure the system tray icon
+NotifyIcon notifyIcon = new NotifyIcon();
+try
+{
+    // Try to load custom icon from wwwroot directory
+    string iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "wwwroot", "favicon.ico");
+    Console.WriteLine($"Looking for icon at: {iconPath}");
+    Console.WriteLine($"Icon file exists: {File.Exists(iconPath)}");
+    
+    if (File.Exists(iconPath))
+    {
+        notifyIcon.Icon = new Icon(iconPath);
+        Console.WriteLine("Custom icon loaded successfully");
+    }
+    else
+    {
+        // Try to load from application directory as fallback
+        iconPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "favicon.ico");
+        Console.WriteLine($"Looking for icon at: {iconPath}");
+        Console.WriteLine($"Icon file exists: {File.Exists(iconPath)}");
+        
+        if (File.Exists(iconPath))
+        {
+            notifyIcon.Icon = new Icon(iconPath);
+            Console.WriteLine("Custom icon loaded successfully from application directory");
+        }
+        else
+        {
+            // Fallback to default icon if custom icon is not found
+            notifyIcon.Icon = SystemIcons.Application;
+            Console.WriteLine("Using default icon");
+        }
+    }
+}
+catch (Exception ex)
+{
+    // Fallback to default icon if there's an error loading the custom icon
+    notifyIcon.Icon = SystemIcons.Application;
+    Console.WriteLine($"Error loading custom icon: {ex.Message}");
+}
+notifyIcon.Visible = true;
+notifyIcon.Text = "SQLAPI";
+
+// Create the context menu
+ContextMenuStrip contextMenu = new ContextMenuStrip();
+
+// Settings menu item
+ToolStripMenuItem settingsItem = new ToolStripMenuItem("Settings");
+settingsItem.Click += (sender, e) => {
+    try
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = "http://localhost:5000/settings",
+            UseShellExecute = true
+        });
+    }
+    catch (Exception ex)
+    {
+        MessageBox.Show($"Error opening settings: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+    }
+};
+
+// Exit menu item
+ToolStripMenuItem exitItem = new ToolStripMenuItem("Exit");
+exitItem.Click += (sender, e) => {
+    notifyIcon.Visible = false;
+    Environment.Exit(0);
+};
+
+// Add menu items to context menu
+contextMenu.Items.Add(settingsItem);
+contextMenu.Items.Add(exitItem);
+
+// Assign context menu to notify icon
+notifyIcon.ContextMenuStrip = contextMenu;
+
+// Run the web application in a separate thread
+var appTask = app.RunAsync();
+
+// Run the Windows Forms message loop
+Application.Run();
+
+// Wait for the web application to complete (which should be never in a typical web app)
+await appTask;
 // Models
 public class AppSettings
 {
@@ -213,14 +300,14 @@ public interface IConfigurationService
 
 public interface IQueryService
 {
-    Task<Dictionary<string, object>[]> ExecuteQueryAsync(int id, Dictionary<string, object> parameters);
+    Task<Dictionary<string, object?>[]> ExecuteQueryAsync(int id, Dictionary<string, object> parameters);
     Task<TestConnectionResult> TestConnectionAsync(DatabaseConfig config);
     Task<List<QuerySlot>> GetQuerySlotsAsync();
 }
 
 public interface IMySqlDataAccess
 {
-    Task<Dictionary<string, object>[]> ExecuteQueryAsync(string sql, Dictionary<string, object> parameters = null);
+    Task<Dictionary<string, object?>[]> ExecuteQueryAsync(string sql, Dictionary<string, object>? parameters = null);
     Task<TestConnectionResult> TestConnectionAsync(DatabaseConfig config);
     bool IsConnectionReadOnly { get; }
 }
@@ -274,7 +361,7 @@ public class ConfigurationService : IConfigurationService
             _logger.LogInformation("Read existing JSON content: {Content}", jsonContent);
             
             // Parse the JSON
-            var jsonObject = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent);
+            var jsonObject = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent) ?? new Dictionary<string, object>();
             _logger.LogInformation("Parsed JSON object with {Count} properties", jsonObject.Count);
             
             // Update the settings
@@ -473,7 +560,7 @@ public class QueryService : IQueryService
         _logger = logger;
     }
 
-    public async Task<Dictionary<string, object>[]> ExecuteQueryAsync(int id, Dictionary<string, object> parameters)
+    public async Task<Dictionary<string, object?>[]> ExecuteQueryAsync(int id, Dictionary<string, object> parameters)
     {
         var slot = await _configurationService.GetQuerySlotAsync(id);
         if (slot == null)
@@ -524,9 +611,9 @@ public class MySqlDataAccess : IMySqlDataAccess
         _logger = logger;
     }
 
-    public async Task<Dictionary<string, object>[]> ExecuteQueryAsync(string sql, Dictionary<string, object> parameters = null)
+    public async Task<Dictionary<string, object?>[]> ExecuteQueryAsync(string sql, Dictionary<string, object>? parameters = null)
     {
-        var results = new List<Dictionary<string, object>>();
+        var results = new List<Dictionary<string, object?>>();
 
         try
         {
@@ -585,7 +672,7 @@ public class MySqlDataAccess : IMySqlDataAccess
 
             while (await reader.ReadAsync())
             {
-                var row = new Dictionary<string, object>();
+                var row = new Dictionary<string, object?>();
                 foreach (var columnName in columnNames)
                 {
                     var ordinal = reader.GetOrdinal(columnName);
@@ -850,7 +937,7 @@ public class QueryController : ControllerBase
     }
 
     [HttpPost("{id}")]
-    public async Task<ActionResult<Dictionary<string, object>[]>> ExecuteQuery(int id, [FromBody] QueryExecutionRequest request)
+    public async Task<ActionResult<Dictionary<string, object?>[]>> ExecuteQuery(int id, [FromBody] QueryExecutionRequest request)
     {
         try
         {
